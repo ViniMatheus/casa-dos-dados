@@ -1,21 +1,31 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import axios from "axios";
+import Link from "next/link";
 
 export default async function Home({ searchParams }: { searchParams: any }) {
-  const params = new URLSearchParams(searchParams).toString();
+  const params = new URLSearchParams();
 
-  const response = await axios.post(
-    `http://localhost:3000/api/dados${params ? `?${params}` : ""}`
-  );
+  Object.keys(searchParams).forEach((key) => {
+    const value = searchParams[key];
+    if (value) {
+      params.append(key, value);
+    }
+  });
 
+  const paramString = params.toString();
+  const queryUrl = `http://localhost:3000/api/dados${paramString ? `?${paramString}` : ""}`;
+
+  const response = await axios.post(queryUrl);
   const searchQuery = searchParams.query?.toString().toLowerCase();
-
   const data = response.data;
+
   return (
     <div className="w-1/2 mx-auto flex flex-col h-screen p-20">
       <div className="w-full py-10 flex space-x-3">
-        <form className= "flex space-x-3" action={`?${params}`}>
+        <form  className="flex space-x-3" action={`${params ? `?${params}` : "" }`} >
           <Input
             name="termo"
             defaultValue={searchQuery?.toString()}
@@ -34,9 +44,11 @@ export default async function Home({ searchParams }: { searchParams: any }) {
             type="text"
             placeholder="Filter municipio..."
           />
-          <Button>
-            Filter
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Switch name="somente_matriz" defaultValue={searchQuery?.toString()} />
+            <Label>Somente Matriz</Label>
+          </div>
+          <Button>Filter</Button>
         </form>
       </div>
       <div className="overflow-x-auto relative shadow-md sm:rounded-lg">
@@ -84,7 +96,9 @@ export default async function Home({ searchParams }: { searchParams: any }) {
           <tbody>
             {data.map((item: any) => (
               <tr key={item.cnpj}>
-                <td className="py-4 px-6">{item.cnpj}</td>
+                
+                <td className="py-4 px-6"><Link href={`/consultar/detalhes/${item.cnpj}`}>{item.cnpj}</Link></td>
+                
                 <td className="py-4 px-6">{item.cnpj_raiz}</td>
                 <td className="py-4 px-6">{item.filial_numero}</td>
                 <td className="py-4 px-6">{item.razao_social}</td>
